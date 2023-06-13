@@ -45,7 +45,7 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 
 	expiresAt := time.Now().UTC().Add(role.TokenTTL)
 	b.Logger().Debug("generating access token for a role", "role_name", role.RoleName, "expires_at", expiresAt)
-	d, err := role.BaseTokenStorage.createAccessToken(gc, expiresAt)
+	d, err := role.BaseTokenStorage.createAccessToken(gc, &expiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
@@ -91,3 +91,4 @@ var roleTokenExamples = []framework.RequestExample{
 		},
 	},
 }
+

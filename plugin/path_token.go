@@ -41,6 +41,10 @@ var accessTokenSchema = map[string]*framework.FieldSchema{
 		Type:        framework.TypeTime,
 		Description: "The token expires at midnight UTC on that date",
 	},
+	"expiry_seconds": {
+		Type:        framework.TypeDurationSecond,
+		Description: "The token expiry, in seconds",
+	},
 	"access_level": {
 		Type:        framework.TypeInt,
 		Description: "access level of access token",
@@ -102,7 +106,7 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 	b.Logger().Debug("generating access token", "id", tokenStorage.BaseTokenStorage.ID,
 		"name", tokenStorage.BaseTokenStorage.Name, "scopes", tokenStorage.BaseTokenStorage.Scopes)
 
-	d, err := tokenStorage.BaseTokenStorage.createAccessToken(gc, *tokenStorage.ExpiresAt)
+	d, err := tokenStorage.BaseTokenStorage.createAccessToken(gc, tokenStorage.ExpiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
@@ -136,7 +140,7 @@ func pathToken(b *GitlabBackend) []*framework.Path {
 
 const pathTokenHelpSyn = `Generate an access token for a given project/group with token name, scopes.`
 const pathTokenHelpDesc = `
-This path allows you to generate an access token. You must supply a project/group id to generate a token for, a name, which 
+This path allows you to generate an access token. You must supply a project/group id to generate a token for, a name, which
 will be used as a name field in Gitlab, and scopes for the generated project access token.
 `
 
@@ -150,3 +154,4 @@ var tokenExamples = []framework.RequestExample{
 		},
 	},
 }
+

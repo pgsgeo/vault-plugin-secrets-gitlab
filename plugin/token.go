@@ -102,6 +102,12 @@ func validateTokenType(t string) error {
 
 func (tokenStorage *TokenStorageEntry) retrieve(data *framework.FieldData) {
 	tokenStorage.BaseTokenStorage.retrieve(data)
+	if expirySecondsRaw, ok := data.GetOk("expiry_seconds"); ok {
+		expires := time.Now().UTC().Add(time.Duration(expirySecondsRaw.(int)) * time.Second)
+		tokenStorage.ExpiresAt = &expires
+		return
+	}
+
 	if expiresAtRaw, ok := data.GetOk("expires_at"); ok {
 		t := expiresAtRaw.(time.Time)
 		tokenStorage.ExpiresAt = &t
@@ -126,17 +132,17 @@ func (baseTokenStorage *BaseTokenStorageEntry) retrieve(data *framework.FieldDat
 	}
 }
 
-func (baseTokenStorage *BaseTokenStorageEntry) createAccessToken(gc Client, expiresAt time.Time) (map[string]interface{}, error) {
+func (baseTokenStorage *BaseTokenStorageEntry) createAccessToken(gc Client, expiresAt *time.Time) (map[string]interface{}, error) {
 	switch baseTokenStorage.TokenType {
 	case tokenTypeGroup:
-		gat, err := gc.CreateGroupAccessToken(baseTokenStorage, &expiresAt)
+		gat, err := gc.CreateGroupAccessToken(baseTokenStorage, expiresAt)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to create group token - " + err.Error())
 		}
 		return groupTokenDetails(gat), nil
 
 	case tokenTypeProject:
-		pat, err := gc.CreateProjectAccessToken(baseTokenStorage, &expiresAt)
+		pat, err := gc.CreateProjectAccessToken(baseTokenStorage, expiresAt)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to create project token - " + err.Error())
 		}

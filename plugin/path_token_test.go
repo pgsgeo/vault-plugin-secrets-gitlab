@@ -69,6 +69,24 @@ func TestAccToken(t *testing.T) {
 		assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
 	})
 
+	t.Run("successfully create with expiry seconds", func(t *testing.T) {
+		e := time.Now().Add(time.Hour * 24)
+		d := map[string]interface{}{
+			"id":         ID,
+			"name":       "vault-test-expires-expiry-seconds",
+			"scopes":     []string{"read_api"},
+			"expiry_seconds": int(time.Until(e).Seconds()),
+			"token_type": "project",
+			}
+			resp, err := testIssueToken(t, backend, req, d)
+			require.NoError(t, err)
+			require.False(t, resp.IsError())
+
+			assert.NotEmpty(t, resp.Data["token"], "no token returned")
+			assert.NotEmpty(t, resp.Data["id"], "no id returned")
+			assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
+	})
+
 	t.Run("successfully create with access level", func(t *testing.T) {
 		e := time.Now().Add(time.Hour * 24)
 		d := map[string]interface{}{
@@ -141,3 +159,4 @@ func testIssueToken(t *testing.T, b logical.Backend, req *logical.Request, data 
 
 	return resp, err
 }
+
